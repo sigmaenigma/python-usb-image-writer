@@ -43,7 +43,73 @@ This script writes an image file to a specified device (e.g., a USB drive) and o
 $ ./image_writer.py
 ```
 
-You will be prompted to enter the device, block size, image location, and whether you want to create persistent storage. The script will then write the image to the specified device and optionally create persistent storage.
+### Example Output
+
+1. **Listing Block Devices**:
+    ```
+    NAME        MAJ:MIN RM   SIZE RO TYPE MOUNTPOINT
+    sda           8:0    0 931.5G  0 disk 
+    ├─sda1        8:1    0   512M  0 part /boot/efi
+    ├─sda2        8:2    0 930.5G  0 part /
+    sdb           8:16   1  14.9G  0 disk 
+    └─sdb1        8:17   1  14.9G  0 part /media/usb
+    ```
+
+2. **User Inputs**:
+    ```
+    Which device (e.g. sda, sdb, sdc) would you like to write to? sdb
+    Block size to use (e.g. 1M, 2M, 4M, 8M, etc.): 4M
+    Image location including name (e.g. /home/username/Downloads/ubuntu.img): /home/user/Downloads/ubuntu.img
+    Do you want to create persistent storage? (y/n): y
+    Enter the size of persistent storage in MB (e.g. 1024 for 1GB): 1024
+    ```
+
+3. **Confirmation Prompt**:
+    ```
+    Would you like to proceed (y/n)? 
+    sudo dd if=/home/user/Downloads/ubuntu.img of=/dev/sdb bs=4M && sync 
+    ```
+
+4. **Script Execution**:
+    ```
+    Beginning script...
+    ```
+
+5. **Image Writing**:
+    ```
+    1024+0 records in
+    1024+0 records out
+    4294967296 bytes (4.3 GB, 4.0 GiB) copied, 120.123 s, 35.8 MB/s
+    ```
+
+6. **Persistent Storage Creation**:
+    ```
+    1024+0 records in
+    1024+0 records out
+    1073741824 bytes (1.1 GB, 1.0 GiB) copied, 10.123 s, 106 MB/s
+    mke2fs 1.45.6 (20-Mar-2020)
+    Discarding device blocks: done                            
+    Creating filesystem with 262144 4k blocks and 65536 inodes
+    Filesystem UUID: 12345678-1234-1234-1234-123456789abc
+    Superblock backups stored on blocks: 
+            32768, 98304, 163840, 229376
+
+    Allocating group tables: done                            
+    Writing inode tables: done                            
+    Creating journal (8192 blocks): done
+    Writing superblocks and filesystem accounting information: done
+    ```
+
+7. **Completion Messages**:
+    ```
+    IMG has been successfully written to /dev/sdb and finished in 130.45 seconds
+    Persistent storage of 1024MB created successfully.
+    ```
+
+8. **Error Handling (if any)**:
+    ```
+    Error creating persistent storage: Command '['sudo', 'dd', 'if=/dev/zero', 'of=/mnt/sdb/casper-rw', 'bs=1M', 'count=1024']' returned non-zero exit status 1.
+    ```
 
 ## License
 
@@ -56,3 +122,7 @@ You should have received a copy of the GNU General Public License along with thi
 ## Author
 
 Adrian Sanabria-Diaz
+
+Source: Conversation with Copilot, 10/2/2024
+(1) github.com. https://github.com/wms910/Trap/tree/fbaa517e161580871f20f005aeeaa1ce90601e66/tools%2Fericw-tools%2Fbin%2FREADME.md.
+(2) github.com. https://github.com/duanshuai007/s3c2440/tree/a1937c23f36ff5d92a10cdb8982d5416b7a1a0fb/kernel%2Fdrivers%2Fstaging%2Fcomedi%2Fdrivers%2Faddi-data%2FAPCI1710_Dig_io.c.
