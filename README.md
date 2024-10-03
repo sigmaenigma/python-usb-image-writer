@@ -122,7 +122,3 @@ You should have received a copy of the GNU General Public License along with thi
 ## Author
 
 Adrian Sanabria-Diaz
-
-Source: Conversation with Copilot, 10/2/2024
-(1) github.com. https://github.com/wms910/Trap/tree/fbaa517e161580871f20f005aeeaa1ce90601e66/tools%2Fericw-tools%2Fbin%2FREADME.md.
-(2) github.com. https://github.com/duanshuai007/s3c2440/tree/a1937c23f36ff5d92a10cdb8982d5416b7a1a0fb/kernel%2Fdrivers%2Fstaging%2Fcomedi%2Fdrivers%2Faddi-data%2FAPCI1710_Dig_io.c.
