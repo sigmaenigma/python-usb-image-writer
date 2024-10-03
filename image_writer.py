@@ -1,61 +1,62 @@
 #!/usr/bin/env python3
-import datetime
 import time
-import getpass
-from subprocess import Popen
+import subprocess
 import os
+import logging
 from termcolor import colored
 
-# -*- coding: utf-8 -*-
-#
-# 	image_writer.py
-#  
-# 	Copyright 2017 Adrian Sanabria-Diaz <sigmacts@gmail.com>
-#  
-# 	This program is free software; you can redistribute it and/or modify
-# 	it under the terms of the GNU General Public License as published by
-# 	the Free Software Foundation; either version 2 of the License, or
-# 	(at your option) any later version.
-#  
-# 	This program is distributed in the hope that it will be useful,
-# 	but WITHOUT ANY WARRANTY; without even the implied warranty of
-# 	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# 	GNU General Public License for more details.
-# 
-# 	You should have received a copy of the GNU General Public License
-# 	along with this program; if not, write to the Free Software
-# 	Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
-# 	MA 02110-1301, USA.
-#
-#	This script writes an img to a Flash drive (e.g. /dev/sdb) using the dd command.
-#
-#	Use at your own risk
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def create_persistent_storage(device, size):
+    """Creates a persistent storage file on the specified device."""
+    persistent_file = f"/mnt/{device}/casper-rw"
+    try:
+        subprocess.run(['sudo', 'mkdir', '-p', f"/mnt/{device}"], check=True)
+        subprocess.run(['sudo', 'mount', f"/dev/{device}", f"/mnt/{device}"], check=True)
+        subprocess.run(['sudo', 'dd', 'if=/dev/zero', f"of={persistent_file}", f"bs=1M", f"count={size}"], check=True)
+        subprocess.run(['sudo', 'mkfs.ext4', '-F', persistent_file], check=True)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error creating persistent storage: {e}")
+    finally:
+        subprocess.run(['sudo', 'umount', f"/mnt/{device}"], check=True)
+        logging.info(f"Persistent storage of {size}MB created successfully.")
 
 def image_write():
-	print(os.system('lsblk -p'))
-	device_to_write_to = input('Which device (e.g. sda, sdb, sdc) would you like to write to?')
-	block_size = input('Block size to use (e.g. 1M, 2M, 4M, 8M, etc.): ')
-	image_to_write = input('Image location including name (e.g. /home/username/Downloads/ubuntu.img): ')
-
-	full_bash_command = "sudo dd if=/dev/" + device_to_write_to + " of=" + image_to_write + ' && sync'
-	answer = input(colored('\n\nWould you like to proceed (y/n)? \n\n' + full_bash_command + ' ', 'blue'))
-	if answer in ['Y', 'y', 'Yes', 'yes']:
-		print('Beginning script...')
-		start = time.time()
-		try:		
-			Popen(full_bash_command, shell=True).wait()
-		except Exception as e:
-			print(str(e))
-
-		print('IMG has been successfuly written to /dev/' + device_to_write_to +' and finished in '+str(time.time()-start)+' seconds')
-
-	else:
-		print('Cancelled...')
-
+    """Writes an image to a specified device using the dd command."""
+    try:
+        print(subprocess.run(['lsblk', '-p'], capture_output=True, text=True).stdout)
+    except subprocess.CalledProcessError as e:
+        logging.error(f"Error listing block devices: {e}")
+        return
+    
+    device_to_write_to = input('Which device (e.g. sda, sdb, sdc) would you like to write to? ')
+    block_size = input('Block size to use (e.g. 1M, 2M, 4M, 8M, etc.): ')
+    image_to_write = input('Image location including name (e.g. /home/username/Downloads/ubuntu.img): ')
+    persistent_storage = input('Do you want to create persistent storage? (y/n): ')
+    
+    full_bash_command = f"sudo dd if={image_to_write} of=/dev/{device_to_write_to} bs={block_size} && sync"
+    answer = input(colored(f'\n\nWould you like to proceed (y/n)? \n\n{full_bash_command} ', 'blue'))
+    
+    if answer.lower() in ['y', 'yes']:
+        print('Beginning script...')
+        start = time.time()
+        try:
+            subprocess.run(full_bash_command, shell=True, check=True)
+            if persistent_storage.lower() in ['y', 'yes']:
+                storage_size = input('Enter the size of persistent storage in MB (e.g. 1024 for 1GB): ')
+                create_persistent_storage(device_to_write_to, storage_size)
+        except subprocess.CalledProcessError as e:
+            logging.error(f"Error writing image: {e}")
+        else:
+            duration = time.time() - start
+            logging.info(f'IMG has been successfully written to /dev/{device_to_write_to} and finished in {duration:.2f} seconds')
+    else:
+        print('Cancelled...')
 
 def main():
-	image_write()
+    """Main function to execute the image writing process."""
+    image_write()
 
 if __name__ == '__main__':
-	main()
+    main()
